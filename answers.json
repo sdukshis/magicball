@@ -1,8 +1,8 @@
 [{
     "text": "Yes",
-    "probability": 0.5
+    "weight": 1
 }, {
     "text": "No",
-    "probability": 0.5
+    "weight": 10
 }
 ]
