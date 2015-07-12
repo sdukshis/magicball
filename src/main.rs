@@ -4,6 +4,7 @@ extern crate rustc_serialize;
 #[macro_use]
 extern crate log;
 extern crate env_logger;
+extern crate getopts;
 
 use rustc_serialize::json;
 
@@ -17,6 +18,8 @@ use hyper::net::Fresh;
 use rand::random;
 use std::fs::File;
 
+use getopts::Options;
+
 /// Magic ball answer structure
 #[derive(RustcDecodable, RustcEncodable, Debug)]
 struct Answer {
@@ -27,16 +30,21 @@ struct Answer {
 }
 
 /// Load posible answer and return then as array
-fn get_answers() -> Result<Vec<Answer>, &'static str> {
+fn get_answers(file: String) -> Result<Vec<Answer>, &'static str> {
+    info!("Loading answers from {}", file);
     let mut data = String::new();
-    let mut f = File::open("answers.json");
-    if let Err(e) = f { 
+    let f = File::open(file);
+    if let Err(_) = f { 
         return Err("Error open file");
     }
-    if let Err(e) = f.unwrap().read_to_string(&mut data) {
+    if let Err(_) = f.unwrap().read_to_string(&mut data) {
         return Err("Error read from file");
     }
     let answers: Vec<Answer> = json::decode(data.as_ref()).unwrap();
+    info!("Loaded {} answers", answers.len());
+    for answer in answers.iter() {
+        debug!("Answer: {:?}", answer);
+    }
     Ok(answers)
 }
 
@@ -47,13 +55,14 @@ fn send_answer(_: Request, res: Response<Fresh>, answer: &[u8]) {
 }
 
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
     env_logger::init().unwrap();
-    info!("Loading answers");
-    let answers = get_answers().unwrap();
-    info!("Loaded {} answers", answers.len());
-    for answer in answers.iter() {
-        debug!("Answer: {:?}", answer);
-    }
+    let mut opts = Options::new();
+    opts.optopt("a", "answers", "answers file to read from", "FILE");
+    let matches = opts.parse(&args[1..]).unwrap();
+
+    let answers = get_answers(matches.opt_str("answers").unwrap()).unwrap();
+
     let handler = move |req: Request, res: Response<Fresh>| {
         let answer = answers.get(random::<usize>() % answers.len()).unwrap();
         send_answer(req, res, answer.text.as_bytes())
