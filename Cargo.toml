@@ -1,0 +1,9 @@
+[package]
+
+name = "magicball"
+version = "0.0.1"
+authors = ["Pavel Filonov <filonovpv@gmail.com>"]
+
+[dependencies]
+hyper = "0.6.4"
+rand = "0.3"
