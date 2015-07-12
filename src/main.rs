@@ -48,7 +48,8 @@ fn get_answers(file: String) -> Result<Vec<Answer>, &'static str> {
     Ok(answers)
 }
 
-fn send_answer(_: Request, res: Response<Fresh>, answer: &[u8]) {
+fn send_answer(req: Request, res: Response<Fresh>, answer: &[u8]) {
+    debug!("{:?} {:?}", req.method, req.uri);
     let mut res = res.start().unwrap();
     res.write_all(answer).unwrap();
     res.end().unwrap();
@@ -68,6 +69,6 @@ fn main() {
         send_answer(req, res, answer.text.as_bytes())
     };
 
-    info!("Starting server on 127.0.0.1:3000");
-    Server::http("127.0.0.1:3000").unwrap().handle(handler);
+    info!("Starting server on 0.0.0.0:3000");
+    Server::http("0.0.0.0:3000").unwrap().handle(handler);
 }
